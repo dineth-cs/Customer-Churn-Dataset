@@ -1,215 +1,201 @@
 import streamlit as st
 import pandas as pd
-import joblib  
+import numpy as np
+import joblib
+import plotly.express as px
+from streamlit_option_menu import option_menu
 
 # ── Page Config ────────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="ChurnGuard | Telco Analytics",
-    page_icon="📡",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="ChurnGuard Enterprise", page_icon="⚡", layout="wide")
 
 # ── Load AI Model ──────────────────────────────────────────────────────────────
-
 @st.cache_resource
 def load_model():
     return joblib.load('churn_model_top5.pkl')
 
 model = load_model()
 
-# ── Custom CSS ─────────────────────────────────────────────────────────────────
+# ── Modern Premium CSS (Fixed for Light Mode issues) ───────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-  html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-  .stApp { background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #141428 100%); background-attachment: fixed; }
-  [data-testid="stSidebar"] { background: linear-gradient(180deg, #1a1a3e 0%, #0f0c29 100%); border-right: 1px solid rgba(255, 255, 255, 0.06); }
-  [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
-  [data-testid="stSidebar"] .stSlider label, [data-testid="stSidebar"] .stSelectbox label, [data-testid="stSidebar"] .stNumberInput label { font-size: 0.78rem !important; font-weight: 600 !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; color: #94a3b8 !important; }
-  .sidebar-header { padding: 1.5rem 0 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 1.5rem; }
-  .sidebar-header h2 { font-size: 1.15rem; font-weight: 700; color: #f8fafc !important; margin: 0; letter-spacing: -0.02em; }
-  .sidebar-header p { font-size: 0.75rem; color: #64748b !important; margin: 0.25rem 0 0 0; }
-  .metric-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 1.4rem 1.5rem; transition: all 0.25s ease; backdrop-filter: blur(12px); position: relative; overflow: hidden; }
-  .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4); opacity: 0; transition: opacity 0.3s ease; }
-  .metric-card:hover { background: rgba(255, 255, 255, 0.07); border-color: rgba(99, 102, 241, 0.35); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15); }
-  .metric-card:hover::before { opacity: 1; }
-  .metric-card .card-icon { font-size: 1.6rem; margin-bottom: 0.6rem; display: block; }
-  .metric-card .card-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; margin-bottom: 0.35rem; }
-  .metric-card .card-value { font-size: 1.55rem; font-weight: 700; color: #f1f5f9; font-family: 'DM Mono', monospace; letter-spacing: -0.02em; line-height: 1.1; }
-  .metric-card .card-sub { font-size: 0.72rem; color: #475569; margin-top: 0.3rem; }
-  .section-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #6366f1; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.4), transparent); }
-  div[data-testid="stButton"] > button { width: 100% !important; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%) !important; color: #ffffff !important; font-family: 'DM Sans', sans-serif !important; font-size: 1rem !important; font-weight: 700 !important; letter-spacing: 0.04em !important; border: none !important; border-radius: 14px !important; padding: 0.85rem 2rem !important; cursor: pointer !important; transition: all 0.3s ease !important; box-shadow: 0 4px 24px rgba(99, 102, 241, 0.35) !important; text-transform: none !important; margin-top: 0.5rem !important; }
-  div[data-testid="stButton"] > button:hover { transform: translateY(-2px) scale(1.01) !important; box-shadow: 0 8px 36px rgba(99, 102, 241, 0.55) !important; filter: brightness(1.1) !important; }
-  div[data-testid="stAlert"] { border-radius: 14px !important; border: none !important; }
-  hr { border-color: rgba(255,255,255,0.06) !important; margin: 1.5rem 0 !important; }
-  [data-testid="stNumberInput"] input:disabled { background: rgba(255,255,255,0.03) !important; color: #94a3b8 !important; -webkit-text-fill-color: #94a3b8 !important; cursor: not-allowed !important; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { font-family: 'Inter', sans-serif; }
+  
+  /* Force dark background and white text globally to override light mode */
+  .stApp { background-color: #0B0F19 !important; }
+  [data-testid="stSidebar"] { background-color: #111827 !important; border-right: 1px solid #1F2937 !important; }
+  .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown p, label, .stMarkdown span { color: #F9FAFB !important; }
+  
+  /* Custom Cards */
+  .glass-card { background: #1F2937 !important; border: 1px solid #374151 !important; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 16px; }
+  .metric-title { color: #9CA3AF !important; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;}
+  .metric-val { color: #F9FAFB !important; font-size: 2.2rem; font-weight: 700; }
+  .metric-sub { color: #10B981 !important; font-size: 0.85rem; font-weight: 500; margin-top: 6px; display: flex; align-items: center; gap: 4px;}
+  .metric-sub.negative { color: #EF4444 !important; }
+  
+  /* Inputs fixing */
+  div[data-baseweb="select"] > div, input { background-color: #374151 !important; color: white !important; border-color: #4B5563 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# ── Sleek Sidebar Menu ─────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-header">
-        <h2>📡 Customer Profile</h2>
-        <p>Configure parameters below</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    contract_type = st.selectbox(
-        "Contract Type",
-        options=["Month-to-month", "One year", "Two year"],
-        index=0,
+    st.markdown("<div style='text-align: center; margin-bottom: 30px; padding-top: 20px;'><h1 style='color: #F9FAFB !important; font-weight: 800; font-size: 26px; margin: 0;'><span style='color: #6366F1;'>⚡</span> ChurnGuard</h1><p style='color: #6B7280 !important; font-size: 13px; margin-top: 4px;'>Enterprise AI Platform</p></div>", unsafe_allow_html=True)
+    
+    selected = option_menu(
+        menu_title=None,
+        options=["Analytics Dashboard", "Single Predictor", "Batch Predictor", "AI Insights", "Financial ROI"],
+        icons=["bar-chart-fill", "person-bounding-box", "people-fill", "cpu-fill", "currency-dollar"],
+        default_index=0,
+        styles={
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"color": "#6B7280", "font-size": "16px"},
+            "nav-link": {"color": "#9CA3AF", "font-size": "14px", "font-weight": "500", "margin":"4px 0", "border-radius": "10px", "padding": "12px 16px"},
+            "nav-link-selected": {"background-color": "rgba(99, 102, 241, 0.15)", "color": "#818CF8", "font-weight": "600", "border": "1px solid rgba(99, 102, 241, 0.3)"},
+        }
     )
 
-    tenure = st.slider("Tenure (Months)", 0, 72, 12, 1)
-    monthly_charges = st.slider("Monthly Charges ($)", 15.0, 120.0, 65.0, 0.5, format="%.2f")
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 1: ANALYTICS DASHBOARD
+# ═══════════════════════════════════════════════════════════════════════════════
+if selected == "Analytics Dashboard":
+    st.markdown("<h2>Business Overview</h2><p>Real-time metrics and customer retention intelligence.</p>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown('<div class="glass-card"><div class="metric-title">Total Users</div><div class="metric-val">7,043</div><div class="metric-sub">↑ +124 this month</div></div>', unsafe_allow_html=True)
+    c2.markdown('<div class="glass-card"><div class="metric-title">Churn Rate</div><div class="metric-val">26.5%</div><div class="metric-sub negative">↓ -2.1% vs last month</div></div>', unsafe_allow_html=True)
+    c3.markdown('<div class="glass-card"><div class="metric-title">Monthly Revenue</div><div class="metric-val">$456K</div><div class="metric-sub">↑ +5.4% growth</div></div>', unsafe_allow_html=True)
+    c4.markdown('<div class="glass-card"><div class="metric-title">Active Subs</div><div class="metric-val">5,174</div><div class="metric-sub">Stable</div></div>', unsafe_allow_html=True)
     
-    total_charges = monthly_charges * tenure
-    st.number_input("Total Charges ($)  —  Auto-calculated", value=total_charges, disabled=True, format="%.2f")
+    col_chart1, col_chart2 = st.columns(2)
+    with col_chart1:
+        st.markdown("<div class='glass-card'><h4>Revenue vs Churn Impact</h4>", unsafe_allow_html=True)
+        df_line = pd.DataFrame({'Month': ['Jan','Feb','Mar','Apr','May','Jun'], 'Revenue': [400, 420, 410, 440, 430, 456], 'Lost': [50, 45, 60, 40, 35, 30]})
+        fig1 = px.area(df_line, x='Month', y=['Revenue', 'Lost'], color_discrete_sequence=['#4F46E5', '#EF4444'], template='plotly_dark')
+        fig1.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=0,b=0))
+        st.plotly_chart(fig1, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    cltv = st.slider("CLTV (Customer Lifetime Value)", 2000, 6000, 3800, 50)
+    with col_chart2:
+        st.markdown("<div class='glass-card'><h4>Customer Base by Contract</h4>", unsafe_allow_html=True)
+        df_bar = pd.DataFrame({'Contract': ['Month-to-month', 'One year', 'Two year'], 'Users': [3875, 1473, 1695]})
+        fig2 = px.bar(df_bar, x='Contract', y='Users', color='Contract', color_discrete_sequence=['#F59E0B', '#10B981', '#3B82F6'], template='plotly_dark')
+        fig2.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=0,b=0), showlegend=False)
+        st.plotly_chart(fig2, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.markdown("""<p style="font-size:0.7rem; color:#334155; text-align:center; margin:0;">ChurnGuard v2.1 &nbsp;·&nbsp; Telco Analytics Suite</p>""", unsafe_allow_html=True)
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 2: SINGLE PREDICTOR
+# ═══════════════════════════════════════════════════════════════════════════════
+elif selected == "Single Predictor":
+    st.markdown("<h2>Individual Risk Analysis</h2><p>Evaluate a single customer's flight risk.</p>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1.8], gap="large")
+    with col1:
+        st.markdown("<div class='glass-card'><h4>Profile Settings</h4>", unsafe_allow_html=True)
+        contract_type = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+        tenure = st.slider("Tenure (Months)", 0, 72, 12, 1)
+        monthly_charges = st.slider("Monthly Charges ($)", 15.0, 120.0, 65.0, 0.5)
+        total_charges = monthly_charges * tenure
+        st.number_input("Total Charges ($)", value=total_charges, disabled=True)
+        cltv = st.slider("Customer Lifetime Value", 2000, 6000, 3800, 50)
+        st.markdown("</div>", unsafe_allow_html=True)
+        predict_btn = st.button("🚀 Process Analysis")
 
+    with col2:
+        if predict_btn:
+            contract_mapping = {"Month-to-month": 0, "One year": 1, "Two year": 2}
+            encoded_contract = contract_mapping[contract_type]
+            input_data = pd.DataFrame({'Total Charges': [total_charges], 'Monthly Charges': [monthly_charges], 'Tenure Months': [tenure], 'CLTV': [cltv], 'Contract': [encoded_contract]})
+            
+            prediction = model.predict(input_data)[0]
+            churn_prob = model.predict_proba(input_data)[0][1]
+            
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            if prediction == 1:
+                st.markdown(f"<h3 style='color: #EF4444 !important;'>⚠️ High Flight Risk Detected</h3><p>Probability of Cancellation: <b>{churn_prob:.1%}</b></p>", unsafe_allow_html=True)
+                st.progress(float(churn_prob))
+                st.error("Action Required: Trigger discount campaign and route to priority support.")
+            else:
+                st.markdown(f"<h3 style='color: #10B981 !important;'>✅ Healthy Customer Profile</h3><p>Probability of Retention: <b>{1-churn_prob:.1%}</b></p>", unsafe_allow_html=True)
+                st.progress(float(1-churn_prob))
+                st.success("Stable behavior. Proceed with standard lifecycle marketing.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-# ── Header ─────────────────────────────────────────────────────────────────────
-col_title, col_badge = st.columns([6, 1])
-with col_title:
-    st.markdown("""
-    <div style="padding: 0.5rem 0 0.25rem 0;">
-        <h1 style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #e2e8f0 30%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -0.04em;">ChurnGuard Analytics</h1>
-        <p style="color: #64748b; font-size: 0.9rem; margin: 0.4rem 0 0 0;">Telco Customer Churn Prediction · Powered by Machine Learning</p>
-    </div>
-    """, unsafe_allow_html=True)
-with col_badge:
-    st.markdown("""<div style="display: flex; align-items: center; justify-content: flex-end; padding-top: 0.6rem;"><span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 0.68rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px;">● Live</span></div>""", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ── Customer Summary Cards ──────────────────────────────────────────────────────
-st.markdown('<div class="section-title">Customer Profile Summary</div>', unsafe_allow_html=True)
-
-c1, c2, c3, c4, c5 = st.columns(5)
-cards = [
-    (c1, "📄", "Contract Type",   contract_type,           "Billing cycle"),
-    (c2, "📅", "Tenure",          f"{tenure} mo",            "Months active"),
-    (c3, "💳", "Monthly Charges", f"${monthly_charges:,.2f}", "Per billing cycle"),
-    (c4, "💰", "Total Charges",   f"${total_charges:,.2f}",  "Lifetime spend"),
-    (c5, "🏆", "CLTV Score",      f"{cltv:,}",               "Predicted value"),
-]
-
-for col, icon, label, value, sub in cards:
-    with col:
-        st.markdown(f"""
-        <div class="metric-card">
-            <span class="card-icon">{icon}</span>
-            <div class="card-label">{label}</div>
-            <div class="card-value">{value}</div>
-            <div class="card-sub">{sub}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ── Predict Button ─────────────────────────────────────────────────────────────
-predict_clicked = st.button("🚀  Predict Churn Risk")
-
-# ── Prediction Logic using AI Model ────────────────────────────────────────────
-if predict_clicked:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Prediction Result</div>', unsafe_allow_html=True)
-
-   
-    contract_mapping = {"Month-to-month": 0, "One year": 1, "Two year": 2}
-    encoded_contract = contract_mapping[contract_type]
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 3: BATCH PREDICTOR
+# ═══════════════════════════════════════════════════════════════════════════════
+elif selected == "Batch Predictor":
+    st.markdown("<h2>Bulk Prediction Engine</h2><p>Upload a CSV file containing multiple customers to predict churn at scale.</p>", unsafe_allow_html=True)
+    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    st.markdown("<h4>1. Download CSV Template</h4>", unsafe_allow_html=True)
     
-    input_data = pd.DataFrame({
-        'Total Charges': [total_charges],
-        'Monthly Charges': [monthly_charges],
-        'Tenure Months': [tenure],
-        'CLTV': [cltv],
-        'Contract': [encoded_contract]
-    })
-
-   
-    prediction = model.predict(input_data)[0]  
-    churn_prob = model.predict_proba(input_data)[0][1]   
-    is_high_risk = (prediction == 1)
-
+    template_df = pd.DataFrame({'Total Charges': [150.50, 850.20], 'Monthly Charges': [50.00, 25.50], 'Tenure Months': [3, 33], 'CLTV': [2500, 4500], 'Contract': [0, 2]})
+    st.download_button(label="📥 Download Template.csv", data=template_df.to_csv(index=False).encode('utf-8'), file_name='churn_template.csv', mime='text/csv')
     
-    if is_high_risk:
-        st.error(f"""
-### 🔴  HIGH CHURN RISK DETECTED
+    st.markdown("<br><h4>2. Upload Customer Data</h4>", unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Upload your CSV file here", type=["csv"])
+    
+    if uploaded_file is not None:
+        try:
+            bulk_data = pd.read_csv(uploaded_file)
+            if st.button("🚀 Analyze Bulk Data"):
+                with st.spinner("AI is analyzing records..."):
+                    predictions = model.predict(bulk_data)
+                    probabilities = model.predict_proba(bulk_data)[:, 1]
+                    bulk_data['Churn_Risk'] = ['High Risk' if p==1 else 'Low Risk' for p in predictions]
+                    bulk_data['Probability'] = [f"{prob:.1%}" for prob in probabilities]
+                    st.success(f"Analysis Complete for {len(bulk_data)} customers!")
+                    st.dataframe(bulk_data)
+                    st.download_button(label="📥 Download Analysis Results", data=bulk_data.to_csv(index=False).encode('utf-8'), file_name='churn_results.csv', mime='text/csv')
+        except Exception as e:
+            st.error("Error processing file. Please ensure it matches the template.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-This customer shows a **strong propensity to churn** according to our Machine Learning model. Immediate intervention is recommended.
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 4: AI INSIGHTS 
+# ═══════════════════════════════════════════════════════════════════════════════
+elif selected == "AI Insights":
+    st.markdown("<h2>AI Decision Insights</h2><p>Understand how the Random Forest model evaluates customer risk.</p>", unsafe_allow_html=True)
+    st.markdown("<div class='glass-card'><h4>Feature Importance (What drives churn?)</h4>", unsafe_allow_html=True)
+    
+    importances = model.feature_importances_
+    features = ['Total Charges', 'Monthly Charges', 'Tenure Months', 'CLTV', 'Contract']
+    df_importance = pd.DataFrame({'Feature': features, 'Importance': importances}).sort_values(by='Importance', ascending=True)
+    
+    fig = px.bar(df_importance, x='Importance', y='Feature', orientation='h', color='Importance', color_continuous_scale='Purpor', template='plotly_dark')
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=0,b=0))
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-**Recommended Retention Actions:**
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 5: FINANCIAL ROI (NEW PAGE!)
+# ═══════════════════════════════════════════════════════════════════════════════
+elif selected == "Financial ROI":
+    st.markdown("<h2>💰 Financial Impact & ROI</h2><p>Calculate the estimated revenue saved by using this AI model.</p>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1, 1.5], gap="large")
+    with col1:
+        st.markdown("<div class='glass-card'><h4>Campaign Parameters</h4>", unsafe_allow_html=True)
+        at_risk_users = st.number_input("Identified At-Risk Customers", min_value=10, max_value=5000, value=500, step=10)
+        avg_cltv = st.number_input("Average CLTV ($)", min_value=100, max_value=10000, value=3800, step=100)
+        campaign_cost = st.slider("Cost per Retention Offer ($)", 5, 100, 25)
+        success_rate = st.slider("Estimated Campaign Success Rate (%)", 5, 80, 30)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-| Priority | Action | Expected Impact |
-|----------|--------|----------------|
-| 🔥 Critical | Offer a **15% loyalty discount** on next 3 billing cycles | Reduces financial friction |
-| ⚡ High | Escalate to **Priority Support** tier instantly | Increases perceived value |
-| 📞 High | Schedule a **proactive outreach call** within 48 hrs | Rebuilds personal connection |
-
-> ⚠️  **Model Warning:** Based on similar customer patterns, this profile is highly volatile.
-        """)
-    else:
-        st.success(f"""
-### 🟢  LOW CHURN RISK — Customer is Stable
-
-Our AI model indicates this customer demonstrates healthy retention signals. Focus on deepening loyalty and maximising lifetime value.
-
-**Recommended Retention Strategies:**
-
-| Priority | Action | Expected Impact |
-|----------|--------|----------------|
-| ✅ Standard | Enrol in **Automated Loyalty Rewards** email programme | Strengthens brand affinity |
-| 🎁 Standard | Offer **anniversary perks** at tenure milestones | Celebrates customer journey |
-| 📊 Medium | Present an **annual plan upgrade** with a small incentive | Increases contract commitment |
-
-> ✔️  **Model Confidence:** Customer matches patterns of long-term stability.
-        """)
-
-    # ── Key Metrics Row ──
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Model Confidence Indicators</div>', unsafe_allow_html=True)
-
-    m1, m2, m3 = st.columns(3)
-
-    retention_score = 1 - churn_prob
-    risk_label   = "High Risk" if is_high_risk else "Low Risk"
-
-    with m1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <span class="card-icon">{"🔴" if is_high_risk else "🟢"}</span>
-            <div class="card-label">Churn Probability</div>
-            <div class="card-value" style="color: {"#f87171" if is_high_risk else "#4ade80"};">{churn_prob:.0%}</div>
-            <div class="card-sub">AI Model prediction</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with m2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <span class="card-icon">💪</span>
-            <div class="card-label">Retention Score</div>
-            <div class="card-value">{retention_score:.0%}</div>
-            <div class="card-sub">Likelihood to remain</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with m3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <span class="card-icon">🧠</span>
-            <div class="card-label">AI Classification</div>
-            <div class="card-value" style="font-size:1.15rem; color: {"#f87171" if is_high_risk else "#4ade80"};">{risk_label}</div>
-            <div class="card-sub">Random Forest Analysis</div>
-        </div>
-        """, unsafe_allow_html=True)
+    with col2:
+        # Math calculations
+        revenue_at_risk = at_risk_users * avg_cltv
+        total_campaign_cost = at_risk_users * campaign_cost
+        customers_saved = int(at_risk_users * (success_rate / 100))
+        revenue_saved = customers_saved * avg_cltv
+        net_profit = revenue_saved - total_campaign_cost
+        
+        st.markdown("<div class='glass-card'><h4>Projected Outcomes</h4>", unsafe_allow_html=True)
+        st.markdown(f"<p>Total Revenue at Risk: <b style='color:#EF4444; font-size:1.2rem;'>${revenue_at_risk:,.2f}</b></p>", unsafe_allow_html=True)
+        st.markdown(f"<p>Total Campaign Cost: <b style='color:#F59E0B; font-size:1.2rem;'>${total_campaign_cost:,.2f}</b></p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color: #374151; margin: 10px 0;'>", unsafe_allow_html=True)
+        st.markdown(f"<p>Customers Successfully Retained: <b style='color:#10B981; font-size:1.2rem;'>{customers_saved}</b></p>", unsafe_allow_html=True)
+        st.markdown(f"<p>Gross Revenue Saved: <b style='color:#10B981; font-size:1.2rem;'>${revenue_saved:,.2f}</b></p>", unsafe_allow_html=True)
+        
+        profit_color = "#10B981" if net_profit > 0 else "#EF4444"
+        st.markdown(f"<div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 12px; margin-top: 15px;'><h3>Net ROI (Profit): <span style='color:{profit_color};'>${net_profit:,.2f}</span></h3></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
